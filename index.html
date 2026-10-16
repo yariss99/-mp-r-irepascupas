@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Împărțirea în scris – pas cu pas</title>
+<style>
+:root{--bg:#f4efe6;--pp:#fffef8;--ln:#cfe0f3;--tx:#243040;--ac:#d9531e;--ok:#2e8b57;--bad:#c0392b;--hl:#fff1b8;--mut:#9aa5b3;--bd:#e2d8c6;--c:clamp(1.9rem,8.5vw,3rem);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171c24;--pp:#222a35;--ln:#33445a;--tx:#eef2f7;--ac:#ff8a52;--hl:#4a4020;--mut:#6f7d90;--bd:#3a4656;--ok:#5fd394;--bad:#ff7b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.w{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:1.4rem;margin:.2em 0 .5em;color:var(--ac)}
+.top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+select,button{font:inherit;font-size:.95rem;border-radius:10px;padding:9px 14px;border:2px solid var(--ac);background:var(--pp);color:var(--tx)}
+button{cursor:pointer;background:var(--ac);color:#fff}
+button.s{background:transparent;color:var(--ac)}
+button:disabled{opacity:.4;cursor:default}
+.ex{font-size:1.6rem;font-weight:700;margin:6px 0}
+.pg{height:10px;background:var(--bd);border-radius:6px;overflow:hidden}
+.pg i{display:block;height:100%;width:0;background:var(--ok);transition:width .3s}
+.pt{font-size:.85rem;color:var(--mut);margin:4px 0 10px}
+.paper{background:var(--pp);border:1px solid var(--bd);border-radius:12px;padding:14px;overflow-x:auto;margin-bottom:12px}
+#g{display:grid;grid-auto-rows:var(--c);width:max-content;margin:0 auto;background-image:linear-gradient(var(--ln) 1px,transparent 1px),linear-gradient(90deg,var(--ln) 1px,transparent 1px);background-size:var(--c) var(--c)}
+.ce{display:flex;align-items:center;justify-content:center;font:700 calc(var(--c)*.68)/1 "Comic Sans MS","Segoe Print","Bradley Hand",cursive,sans-serif}
+.dg.used{color:var(--mut)}
+.dg.grp{background:var(--hl);border-radius:6px}
+.dg.clk{cursor:pointer}
+.dg.pick{background:var(--hl);border-radius:6px;animation:pl 1s infinite}
+@keyframes pl{50%{box-shadow:0 0 0 4px var(--ac)}}
+.pr{border-bottom:3px solid var(--tx)}
+.sg{color:var(--ac)}
+.vb{border-left:3px solid var(--tx)}
+.qt{border-top:3px solid var(--tx)}
+.dv{justify-content:flex-start;padding-left:.45em}
+.drop{animation:dr .5s ease-out}
+@keyframes dr{from{transform:translateY(calc(var(--c)*-1.6));opacity:0}to{transform:none;opacity:1}}
+input.in{width:100%;height:100%;font:inherit;text-align:center;border:2px dashed var(--ac);background:var(--hl);color:var(--tx);border-radius:6px;padding:0;min-width:0}
+input.in.r{text-align:right;padding-right:.3em}
+.card{background:var(--pp);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.lab{font-size:.85rem;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.04em}
+#ins{font-size:1.2rem;margin:4px 0 8px}
+#pin input.in{width:7em;height:2.6rem;font-size:1.4rem}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#fb{min-height:1.6em;margin-top:8px;font-weight:600}
+#fb.ok{color:var(--ok)}#fb.bad{color:var(--bad)}
+#fin{font-size:1.15rem}
+</style>
+</head>
+<body>
+<div class="w">
+ <h1>➗ Împărțirea în scris</h1>
+ <div class="top">
+  <select id="lv" aria-label="Nivel">
+   <option value="1">Nivelul 1 – Începător</option>
+   <option value="2">Nivelul 2 – Consolidare</option>
+   <option value="3">Nivelul 3 – Provocare</option>
+  </select>
+  <button id="bn">Exercițiu nou</button>
+  <button id="bm" class="s">Exemplul 542 : 2</button>
+ </div>
+ <div class="ex" id="ex"></div>
+ <div class="pg"><i id="pb"></i></div>
+ <div class="pt" id="pt"></div>
+ <div class="paper"><div id="g"></div></div>
+ <div class="card">
+  <div class="lab" id="lab"></div>
+  <div id="ins"></div>
+  <div id="pin"></div>
+  <div class="btns">
+   <button id="bv">✔ Verifică</button>
+   <button id="bb" class="s">← Înapoi</button>
+   <button id="br" class="s">↺ Reia</button>
+  </div>
+  <div id="fb" role="status" aria-live="polite"></div>
+  <div id="fin"></div>
+ </div>
+</div>
+<script>
+var $=function(i){return document.getElementById(i)},g=$("g"),P,cur=0,inp,solved=0;
+var OK=["Corect!","Bravo!","Foarte bine!","Exact!"];
+function R(a,b){return a+Math.floor(Math.random()*(b-a+1))}
+
+/* ---------- algoritmul matematic (separat de interfață) ---------- */
+function build(n,b){
+ var d=String(n).split("").map(Number),s=0,g0=d[0];
+ if(g0<b){g0=g0*10+d[1];s=1}
+ var it=[],cu=g0,rem=0;
+ for(var i=s;i<d.length;i++){
+  if(i>s)cu=rem*10+d[i];
+  var q=Math.floor(cu/b);rem=cu-q*b;
+  it.push({i:i,cu:cu,q:q,pr:q*b,rem:rem});
+ }
+ var st=[];
+ it.forEach(function(x,k){
+  if(!k)st.push({t:"grp",k:0});
+  st.push({t:"q",k:k},{t:"mul",k:k},{t:"sub",k:k});
+  if(k<it.length-1)st.push({t:"down",k:k});
+ });
+ st.push({t:"rest",k:it.length-1});
+ return{n:n,b:b,d:d,s:s,it:it,st:st};
+}
+function valid(p){
+ var Q=+p.it.map(function(x){return x.q}).join(""),r=p.it[p.it.length-1].rem;
+ return Q===Math.floor(p.n/p.b)&&r===p.n%p.b&&r<p.b&&Q*p.b+r===p.n;
+}
+function gen(L){
+ for(var t=0;t<600;t++){
+  var b=R(2,9),n,q;
+  if(L==1){var m=Math.floor(9/b);n=b*R(1,m)*10+b*R(1,m)}
+  else if(L==2){q=R(Math.ceil(100/b),Math.floor(999/b));if(Math.random()<.5&&!/.0/.test(""+q))continue;n=b*q}
+  else{n=R(100,9999);if(n%b===0)continue;q=Math.floor(n/b);if(Math.random()<.7&&!/.0/.test(""+q))continue}
+  var p=build(n,b);if(valid(p))return p;
+ }
+ return build(542,2);
+}
+
+/* ---------- interfață ---------- */
+function say(t,ok){var f=$("fb");f.textContent=t;f.className=ok?"ok":"bad"}
+function load(p){P=p;cur=0;$("fb").textContent="";render()}
+function render(){
+ var st=P.st,n=P.d.length,qc=P.it.length,S=st[cur],fin=cur>=st.length;
+ g.innerHTML="";g.style.gridTemplateColumns="repeat("+(n+1+qc)+",var(--c))";inp=null;$("pin").innerHTML="";
+ var dn=function(t,k){return st.slice(0,cur).some(function(x){return x.t===t&&x.k===k})};
+ var put=function(r,c,tx,cl,sp){var e=document.createElement("div");e.className="ce "+(cl||"");e.textContent=tx;e.style.gridRow=r;e.style.gridColumn=c+(sp?" / span "+sp:"");g.appendChild(e);return e};
+ var mk=function(host,cls,len){var i=document.createElement("input");i.className="in "+(cls||"");i.type="text";i.inputMode="numeric";i.maxLength=len;i.autocomplete="off";i.setAttribute("aria-label","răspuns");i.onkeydown=function(e){if(e.key==="Enter")check()};host.textContent="";host.appendChild(i);inp=i};
+ P.d.forEach(function(x,j){
+  var cl="dg";
+  if(j<=P.s){if(dn("grp",0))cl+=" grp"}else if(dn("down",j-P.s-1))cl+=" used";
+  var e=put(1,j+2,x,cl);
+  if(S&&S.t==="down"&&j>P.s&&!dn("down",j-P.s-1)){e.classList.add("clk");if(j===P.s+S.k+1)e.classList.add("pick");e.onclick=function(){pick(j)}}
+ });
+ put(1,n+2,P.b,"dv vb",qc);
+ P.it.forEach(function(x,k){
+  var ce=x.i+2,rP=2+2*k,rR=3+2*k;
+  var qs=put(2,n+2+k,dn("q",k)?x.q:"","qt"+(k?"":" vb"));
+  if(S&&S.t==="q"&&S.k===k)mk(qs,"",1);
+  if(dn("mul",k)){var s=""+x.pr;for(var m=0;m<s.length;m++)put(rP,ce-s.length+1+m,s[m],"pr");put(rP,ce-s.length,"−","sg")}
+  else if(S&&S.t==="mul"&&S.k===k){var h=put(rP,ce-1,"","",2);mk(h,"r",2)}
+  if(dn("sub",k))put(rR,ce,x.rem,"");
+  else if(S&&S.t==="sub"&&S.k===k){var h2=put(rR,ce,"");mk(h2,"",1)}
+  if(k<qc-1&&dn("down",k))put(rR,ce+1,P.d[x.i+1],"drop");
+ });
+ var L={grp:"Pasul 1 – Analizăm prima cifră",q:"Împărțim",mul:"Înmulțim",sub:"Scădem",down:"Coborâm următoarea cifră",rest:"Pasul 6 – Stabilim restul"};
+ var done=$("fin");done.textContent="";
+ if(fin){
+  var Q=P.it.map(function(x){return x.q}).join(""),r=P.it[qc-1].rem;
+  $("lab").textContent="Gata!";$("ins").textContent="";
+  done.innerHTML="🎉 <b>"+P.n+" : "+P.b+" = "+Q+(r?" rest "+r:"")+"</b><br>Proba: "+Q+" × "+P.b+(r?" + "+r:"")+" = "+P.n;
+  say("Ai terminat exercițiul. Felicitări!",1);
+ }else{
+  var it=P.it[S.k],b=P.b;
+  $("lab").textContent=L[S.t];
+  $("ins").textContent={
+   grp:"Care este primul număr, format din primele cifre ale deîmpărțitului, care se poate împărți la "+b+"? Scrie-l.",
+   q:"Împărțim "+it.cu+" : "+b+". Ce cifră scriem la cât?",
+   mul:"Înmulțim: "+it.q+" × "+b+" = ? Scrie rezultatul sub "+it.cu+".",
+   sub:"Scădem: "+it.cu+" − "+it.pr+" = ? Scrie rezultatul sub linie.",
+   down:"Apasă pe următoarea cifră din deîmpărțit, ca să o cobori lângă rezultatul scăderii.",
+   rest:"Care este restul împărțirii? (Restul trebuie să fie mai mic decât "+b+".)"
+  }[S.t];
+  if(S.t==="grp"||S.t==="rest"){var w=document.createElement("div");$("pin").appendChild(w);mk(w,"",4)}
+ }
+ $("ex").textContent=P.n+" : "+P.b+" = "+(fin?P.it.map(function(x){return x.q}).join(""):"?");
+ $("pb").style.width=(100*cur/st.length)+"%";
+ $("pt").textContent=fin?"Exercițiu terminat · rezolvate în această sesiune: "+solved:"Pasul "+(cur+1)+" din "+st.length+" · rezolvate în această sesiune: "+solved;
+ $("bv").disabled=fin||!inp;$("bb").disabled=cur===0;
+ if(inp)inp.focus({preventScroll:true});
+}
+function advance(){cur++;if(cur>=P.st.length)solved++;render()}
+function pick(j){
+ var S=P.st[cur];
+ if(j===P.s+S.k+1){advance();say(OK[R(0,3)],1)}
+ else say("Ce cifră trebuie coborâtă acum? Coboară următoarea cifră, în ordine.",0);
+}
+function check(){
+ var S=P.st[cur];if(!S||!inp)return;
+ var r=inp.value.trim();
+ if(!/^\d+$/.test(r)){say("Scrie un număr, folosind cifre.",0);return}
+ var v=+r,it=P.it[S.k],b=P.b,h=null;
+ if(S.t==="grp"){if(v!==it.cu)h=v<b?"Numărul acesta este prea mic: nu se poate împărți la "+b+". Ia mai multe cifre!":"Începe cu prima cifră. Dacă este mai mică decât "+b+", ia primele două cifre."}
+ else if(S.t==="q"){if(v!==it.q)h=v>it.q?"Cifra este prea mare: "+v+" × "+b+" depășește "+it.cu+".":"Mai poți continua: împărțitorul mai încape în "+it.cu+". Încearcă o cifră mai mare."}
+ else if(S.t==="mul"){if(v!==it.pr)h="Verifică înmulțirea! Cât obții dacă înmulțești cifra din cât ("+it.q+") cu împărțitorul?"}
+ else if(S.t==="sub"){if(v!==it.rem)h=v>=b?"Restul trebuie să fie mai mic decât împărțitorul. Ai grijă la scădere!":"Ai grijă la scădere! Scade "+it.pr+" din "+it.cu+"."}
+ else if(S.t==="rest"){if(v!==it.rem)h=v>=b?"Restul trebuie să fie mai mic decât împărțitorul!":"Restul este rezultatul ultimei scăderi."}
+ if(h){say(h,0);inp.select();return}
+ advance();say(cur>=P.st.length?"Ai terminat exercițiul. Felicitări!":OK[R(0,3)],1);
+}
+$("bv").onclick=check;
+$("bb").onclick=function(){if(cur>0){cur--;$("fb").textContent="";render()}};
+$("br").onclick=function(){load(P)};
+$("bn").onclick=function(){load(gen(+$("lv").value))};
+$("bm").onclick=function(){load(build(542,2))};
+load(build(542,2));
+</script>
+</body>
+</html>
